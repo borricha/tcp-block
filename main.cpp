@@ -1,13 +1,4 @@
-#include <stdio.h>
-#include <pcap.h>
-#include "arphdr.h"
-#include "ethhdr.h"
-#include "ip.h"
-#include "iphdr.h"
-#include "mac.h"
-#include "tcphdr.h"
-#include <string>
-
+#include "headers.h"
 
 #pragma pack(push, 1)
 struct EthIpPacket  final
@@ -31,6 +22,7 @@ struct Ip_Tcp final
 
 void usage();
 char *my_strnstr(const char *big, const char *little, size_t len); 
+void get_mymac(char *dev, Mac *mymac);
 
 int main(int argc, char *argv[])
 {
@@ -42,6 +34,9 @@ int main(int argc, char *argv[])
 
     char *dev = argv[1];
     char *pattern = argv[2];
+    Mac mymac;
+    get_mymac(dev, &mymac);
+    printf("My Mac: %s\n", std::string(mymac).data());
 
     char errbuf[PCAP_ERRBUF_SIZE];
     pcap_t *handle = pcap_open_live(dev, BUFSIZ, 1, 1, errbuf);
@@ -81,11 +76,11 @@ int main(int argc, char *argv[])
         if (data_size > 0)
 		{
 			//pattern이 존재하는지 데이터 길이만큼 확인
-            //HTTP packet에 대해서는 Forward RST, Backward FIN을, HTTPS packet에 대해서는 Forward RST, Backward RST를 보내고 있다
 			if(my_strnstr(ip_tcp->data, pattern, data_size))
             {
                 //패턴을 패킷에서 찾았을 때
                 //HTTP, HTTPS 구분
+                //HTTP packet에 대해서는 Forward RST, Backward FIN을, HTTPS packet에 대해서는 Forward RST, Backward RST를 보내고 있다
                 if(ip_tcp->tcp_.sport() == 80 || ip_tcp->tcp_.dport() == 80)
                 {
                     printf("HTTP임\n");
@@ -133,4 +128,26 @@ char *my_strnstr(const char *big, const char *little, size_t len)
 		i++;
 	}
 	return (0);
+}
+
+void get_mymac(char *dev, Mac *mymac)
+{
+    int fd;
+    struct ifreq ifr;
+    const char *iface = dev;
+    memset(&ifr, 0, sizeof(ifr));
+
+    fd = socket(AF_INET, SOCK_DGRAM, 0);
+
+    ifr.ifr_addr.sa_family = AF_INET;
+    strncpy(ifr.ifr_name, iface, IFNAMSIZ - 1);
+
+    if (0 == ioctl(fd, SIOCGIFHWADDR, &ifr))
+    {
+        *mymac = Mac((uint8_t *)ifr.ifr_hwaddr.sa_data);
+    }
+
+
+    close(fd);
+    return;
 }
