@@ -36,5 +36,8 @@ struct IpHdr final{
 		Udp = 17, // User Datagram Protocol
 		Sctp = 132, // Stream Control Transport Protocol
 	};
+	static uint16_t calcChecksum(IpHdr* ipHdr);
+	static uint16_t recalcChecksum(uint16_t oldChecksum, uint16_t oldValue, uint16_t newValue);
+	static uint16_t recalcChecksum(uint16_t oldChecksum, uint32_t oldValue, uint32_t newValue);
 };
 #pragma pack(pop)

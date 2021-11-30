@@ -11,6 +11,7 @@
 #pragma once
 #include <cstdint>
 #include <arpa/inet.h>
+#include "iphdr.h"
 
 #pragma pack(push, 1)
 struct TcpHdr final{
@@ -44,6 +45,8 @@ struct TcpHdr final{
 		Syn = 0x02,
 		Fin = 0x01
 	};
+	
+	static uint16_t calcChecksum(IpHdr* ipHdr, TcpHdr* tcpHdr);
 
 };
 #pragma pack(pop)
