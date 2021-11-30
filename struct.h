@@ -34,6 +34,6 @@ struct Backward_Packet final
     EthHdr eth_;
 	IpHdr ip_;
 	TcpHdr tcp_;
-    char msg[58] = "HTTP/1.1 302 Redirect\r\nLocation: http://test.gilgil.net\r\n";
+    char msg[100];
 };
 #pragma pack(pop)
